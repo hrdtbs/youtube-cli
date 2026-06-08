@@ -2,6 +2,7 @@
 
 import { Command } from "commander";
 import {
+  runAuthChannelsCommand,
   runAuthLoginCommand,
   runAuthStatusCommand,
 } from "./commands/auth.js";
@@ -46,6 +47,17 @@ authCmd
   .action(async () => {
     try {
       await runAuthStatusCommand();
+    } catch (error) {
+      reportError(error);
+    }
+  });
+
+authCmd
+  .command("channels")
+  .description("Show the YouTube channel tied to the current OAuth token")
+  .action(async () => {
+    try {
+      await runAuthChannelsCommand();
     } catch (error) {
       reportError(error);
     }

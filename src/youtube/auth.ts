@@ -101,11 +101,18 @@ export async function runAuthLogin(options: {
 
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
-    prompt: "consent",
+    // select_account is required for Google's Brand Account channel picker.
+    prompt: "consent select_account",
     scope: YOUTUBE_SCOPES,
   });
 
   console.log("Opening browser for Google authorization...");
+  console.log(
+    "If you manage a Brand Account, choose your Google account, then pick the Brand Account channel on the next screen.",
+  );
+  console.log(
+    "If the channel picker does not appear, revoke this app at https://myaccount.google.com/permissions and run auth login again.",
+  );
   console.log(`If the browser does not open, visit:\n${authUrl}\n`);
 
   try {
@@ -127,21 +134,59 @@ export async function runAuthLogin(options: {
   await saveTokenFile(tokens as TokenFile);
 
   const verifyClient = await getAuthorizedClient(clientSecretPath);
-  const channel = await fetchMyChannelTitle(verifyClient);
+  const channels = await fetchMyChannels(verifyClient);
   console.log("Authentication saved successfully.");
   console.log(`Token file: ${getTokenPath()}`);
-  if (channel) {
-    console.log(`Channel: ${channel}`);
-  }
+  printChannels(channels);
 }
 
-async function fetchMyChannelTitle(client: OAuth2Client): Promise<string | null> {
+export interface AuthenticatedChannel {
+  id: string;
+  title: string;
+}
+
+export async function fetchMyChannels(
+  client: OAuth2Client,
+): Promise<AuthenticatedChannel[]> {
   const youtube = google.youtube({ version: "v3", auth: client });
   const response = await youtube.channels.list({
     part: ["snippet"],
     mine: true,
   });
-  return response.data.items?.[0]?.snippet?.title ?? null;
+
+  return (response.data.items ?? [])
+    .filter((item) => item.id && item.snippet?.title)
+    .map((item) => ({
+      id: item.id!,
+      title: item.snippet!.title!,
+    }));
+}
+
+function printChannels(channels: AuthenticatedChannel[]): void {
+  if (channels.length === 0) {
+    console.log("Channel: (none returned by API)");
+    return;
+  }
+
+  for (const channel of channels) {
+    console.log(`Channel: ${channel.title} (${channel.id})`);
+  }
+}
+
+export async function runAuthChannels(): Promise<void> {
+  const client = await getAuthorizedClient();
+  const channels = await fetchMyChannels(client);
+
+  if (channels.length === 0) {
+    console.log("No channel associated with the current token.");
+    console.log(
+      "Run auth login again and select your Brand Account on the channel picker screen.",
+    );
+    return;
+  }
+
+  console.log("Authenticated channel(s):");
+  printChannels(channels);
 }
 
 export async function getAuthorizedClient(
@@ -197,8 +242,14 @@ export async function runAuthStatus(): Promise<void> {
 
   try {
     const client = await getAuthorizedClient();
-    const channel = await fetchMyChannelTitle(client);
-    console.log(`Status: authenticated${channel ? ` (${channel})` : ""}`);
+    const channels = await fetchMyChannels(client);
+    if (channels.length === 0) {
+      console.log("Status: authenticated (no channel returned)");
+      return;
+    }
+
+    const label = channels.map((c) => `${c.title} (${c.id})`).join(", ");
+    console.log(`Status: authenticated (${label})`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.log(`Status: invalid (${message})`);

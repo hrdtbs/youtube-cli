@@ -1,4 +1,4 @@
-import { runAuthLogin, runAuthStatus } from "../youtube/auth.js";
+import { runAuthChannels, runAuthLogin, runAuthStatus } from "../youtube/auth.js";
 
 export interface AuthLoginOptions {
   clientSecret?: string;
@@ -16,4 +16,8 @@ export async function runAuthLoginCommand(
 
 export async function runAuthStatusCommand(): Promise<void> {
   await runAuthStatus();
+}
+
+export async function runAuthChannelsCommand(): Promise<void> {
+  await runAuthChannels();
 }

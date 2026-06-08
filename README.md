@@ -51,3 +51,20 @@ upload:
 ```bash
 youtube auth login --client-secret ./client_secret.json
 ```
+
+### ブランドアカウント（管理チャンネル）
+
+アップロード先は OAuth 時に選んだチャンネルに固定されます。ブランドアカウントを選ぶには:
+
+1. [Google アカウントのアクセス権](https://myaccount.google.com/permissions) でこのアプリの連携を一度削除
+2. `youtube auth login` を再実行
+3. Google アカウントを選んだあと、表示される **ブランドアカウント / チャンネル選択** で目的のチャンネルを選ぶ
+
+認証後のチャンネル確認:
+
+```bash
+youtube auth channels
+youtube auth status
+```
+
+**注意:** オーナーではなく「管理者」だけのチャンネルで、かつブランドアカウント化されていない場合は OAuth で選べません。YouTube 側の制限です。
