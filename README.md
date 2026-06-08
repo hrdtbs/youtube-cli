@@ -51,14 +51,3 @@ upload:
 ```bash
 youtube auth login --client-secret ./client_secret.json
 ```
-
-再生リスト機能を使う場合、以前 `auth login` 済みなら権限追加のため再ログインが必要です。
-
-```bash
-youtube auth login --client-secret ./client_secret.json
-```
-
-トークンは次に保存されます。
-
-- Windows: `%APPDATA%/youtube-cli/token.json`
-- macOS / Linux: `~/.config/youtube-cli/token.json`
