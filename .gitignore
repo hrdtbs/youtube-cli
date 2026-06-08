@@ -81,6 +81,11 @@ typings/
 .env
 .env.test
 
+# OAuth credentials
+client_secret.json
+credentials.json
+token.json
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 

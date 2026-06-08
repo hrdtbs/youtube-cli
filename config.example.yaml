@@ -1,0 +1,27 @@
+template:
+  description: |
+    {{title}} をお楽しみください。
+
+    チャンネル登録・高評価お願いします。
+    #music #original
+  tags:
+    - music
+    - original
+  categoryId: "10"
+  defaultLanguage: ja
+
+# Optional: add each uploaded video to a playlist after upload.
+# playlistId accepts a playlist ID (PL...) or a URL with ?list=...
+upload:
+  playlistId: "PLxxxxxxxxxxxxxxxx"
+
+schedule:
+  timezone: Asia/Tokyo
+  startDate: 2026-06-10
+  slots:
+    - weekday: 1
+      time: "18:00"
+    - weekday: 3
+      time: "12:00"
+    - weekday: 5
+      time: "18:00"
