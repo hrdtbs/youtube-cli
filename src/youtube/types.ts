@@ -1,4 +1,5 @@
 export interface TemplateConfig {
+  title?: string;
   description: string;
   tags: string[];
   categoryId: string;

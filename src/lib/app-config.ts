@@ -77,6 +77,13 @@ function validateConfig(raw: unknown): AppConfig {
   const templateData = template as Record<string, unknown>;
   const scheduleData = schedule as Record<string, unknown>;
 
+  const title = templateData.title;
+  if (title !== undefined) {
+    if (typeof title !== "string" || title.trim() === "") {
+      throw new Error("template.title must be a non-empty string.");
+    }
+  }
+
   const description = templateData.description;
   if (typeof description !== "string" || description.trim() === "") {
     throw new Error("template.description is required.");
@@ -144,6 +151,7 @@ function validateConfig(raw: unknown): AppConfig {
 
   return {
     template: {
+      title: typeof title === "string" ? title : undefined,
       description,
       tags: tags.map(String),
       categoryId: String(templateData.categoryId ?? "22"),

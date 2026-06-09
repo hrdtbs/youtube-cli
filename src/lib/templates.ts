@@ -7,11 +7,19 @@ export function titleFromFilename(filePath: string): string {
   return ext ? name.slice(0, -ext.length) : name;
 }
 
+function applyTitleTemplate(baseTitle: string, template: TemplateConfig): string {
+  if (!template.title) {
+    return baseTitle;
+  }
+  return template.title.replaceAll("{{title}}", baseTitle);
+}
+
 export function applyTemplate(
-  title: string,
+  baseTitle: string,
   template: TemplateConfig,
 ): VideoMetadata {
-  const description = template.description.replaceAll("{{title}}", title);
+  const title = applyTitleTemplate(baseTitle, template);
+  const description = template.description.replaceAll("{{title}}", baseTitle);
 
   return {
     title,

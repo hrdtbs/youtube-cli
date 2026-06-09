@@ -1,4 +1,6 @@
 template:
+  # Optional. {{title}} is replaced with the filename (without extension).
+  # title: "【新曲】{{title}}"
   description: |
     {{title}} をお楽しみください。
 
