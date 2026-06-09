@@ -43,18 +43,56 @@ export async function resolveConfigPath(
   return getDefaultConfigPath();
 }
 
-function validateSlot(slot: ScheduleSlot, index: number): void {
-  if (typeof slot.weekday !== "number" || slot.weekday < 0 || slot.weekday > 6) {
-    throw new Error(
-      `schedule.slots[${index}].weekday must be 0-6 (0=Sunday).`,
-    );
+function parseScheduleSlots(slots: unknown[]): ScheduleSlot[] {
+  const parsedSlots: ScheduleSlot[] = [];
+
+  for (let index = 0; index < slots.length; index += 1) {
+    const slot = slots[index];
+    if (!slot || typeof slot !== "object") {
+      throw new Error(`schedule.slots[${index}] must be an object.`);
+    }
+
+    const slotData = slot as Record<string, unknown>;
+    const time = slotData.time;
+    if (typeof time !== "string" || !TIME_PATTERN.test(time)) {
+      throw new Error(
+        `schedule.slots[${index}].time must be HH:mm (24-hour).`,
+      );
+    }
+
+    const isDaily = slotData.daily === true;
+    const hasWeekday = slotData.weekday !== undefined;
+
+    if (isDaily && hasWeekday) {
+      throw new Error(
+        `schedule.slots[${index}]: use either daily or weekday, not both.`,
+      );
+    }
+
+    if (!isDaily && !hasWeekday) {
+      throw new Error(
+        `schedule.slots[${index}]: weekday (0-6) or daily: true is required.`,
+      );
+    }
+
+    if (isDaily) {
+      for (let weekday = 0; weekday <= 6; weekday += 1) {
+        parsedSlots.push({ weekday, time });
+      }
+      continue;
+    }
+
+    const weekday = Number(slotData.weekday);
+    if (typeof slotData.weekday !== "number" || weekday < 0 || weekday > 6) {
+      throw new Error(
+        `schedule.slots[${index}].weekday must be 0-6 (0=Sunday).`,
+      );
+    }
+
+    parsedSlots.push({ weekday, time });
   }
 
-  if (typeof slot.time !== "string" || !TIME_PATTERN.test(slot.time)) {
-    throw new Error(
-      `schedule.slots[${index}].time must be HH:mm (24-hour).`,
-    );
-  }
+  return parsedSlots;
 }
 
 function validateConfig(raw: unknown): AppConfig {
@@ -109,18 +147,7 @@ function validateConfig(raw: unknown): AppConfig {
     throw new Error("schedule.slots must be a non-empty array.");
   }
 
-  const parsedSlots: ScheduleSlot[] = slots.map((slot, index) => {
-    if (!slot || typeof slot !== "object") {
-      throw new Error(`schedule.slots[${index}] must be an object.`);
-    }
-    const slotData = slot as Record<string, unknown>;
-    const parsed: ScheduleSlot = {
-      weekday: Number(slotData.weekday),
-      time: String(slotData.time),
-    };
-    validateSlot(parsed, index);
-    return parsed;
-  });
+  const parsedSlots = parseScheduleSlots(slots);
 
   const upload = data.upload;
   let uploadConfig: AppConfig["upload"];

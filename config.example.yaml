@@ -21,9 +21,9 @@ schedule:
   timezone: Asia/Tokyo
   startDate: 2026-06-10
   slots:
-    - weekday: 1
+    # Every day at 18:00 (alternative to listing weekday 0-6).
+    - daily: true
       time: "18:00"
+    # Or specific weekdays (0=Sunday, 6=Saturday).
     - weekday: 3
       time: "12:00"
-    - weekday: 5
-      time: "18:00"

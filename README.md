@@ -1,6 +1,6 @@
 # youtube-cli
 
-フォルダ内の動画を YouTube に一括アップロードし、設定した曜日・時刻スロットで予約投稿する CLI です。
+フォルダ内の動画を YouTube に一括アップロードし、設定した曜日または毎日の時刻スロットで予約投稿する CLI です。
 
 ## インストール
 
@@ -34,6 +34,19 @@ youtube categories list --region JP --hl ja
 ```
 
 `config.example.yaml` を動画フォルダ内の `config.yaml` にコピーして編集してください。
+
+予約投稿は `schedule.slots` で指定します。毎日同じ時刻にする場合は `daily: true`、特定曜日だけにする場合は `weekday`（0=日曜、6=土曜）を使います。
+
+```yaml
+schedule:
+  timezone: Asia/Tokyo
+  startDate: 2026-06-10
+  slots:
+    - daily: true
+      time: "18:00"
+    - weekday: 3
+      time: "12:00"
+```
 
 再生リストへ自動追加する場合は `upload.playlistId` を指定します（プレイリスト ID または `?list=` 付き URL）。
 
