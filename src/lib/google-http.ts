@@ -132,9 +132,18 @@ async function runNodeHttpStreamRequest(
   }
 
   return new Promise((resolve, reject) => {
-    const proc = spawn(nodeBin, [nodeHttpScriptPath, "--stream"], {
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+    const config = {
+      url: String(url),
+      method: opts.method,
+      headers: opts.headers,
+    };
+    const proc = spawn(
+      nodeBin,
+      [nodeHttpScriptPath, "--stream", JSON.stringify(config)],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+      },
+    );
 
     let stdout = "";
     let stderr = "";
@@ -166,12 +175,6 @@ async function runNodeHttpStreamRequest(
       resolve(JSON.parse(line) as NodeHttpResponse);
     });
 
-    const config = {
-      url: String(url),
-      method: opts.method,
-      headers: opts.headers,
-    };
-    proc.stdin.write(`${JSON.stringify(config)}\n`);
     body.pipe(proc.stdin);
   });
 }

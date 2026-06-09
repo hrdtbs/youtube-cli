@@ -21,32 +21,6 @@ function readAllStdin() {
   });
 }
 
-function readLine(stream) {
-  return new Promise((resolve, reject) => {
-    let buffer = "";
-    const onData = (chunk) => {
-      buffer += chunk.toString("utf8");
-      const newline = buffer.indexOf("\n");
-      if (newline === -1) {
-        return;
-      }
-      stream.off("data", onData);
-      stream.off("error", onError);
-      resolve(buffer.slice(0, newline));
-    };
-    const onError = (error) => {
-      stream.off("data", onData);
-      stream.off("error", onError);
-      reject(error);
-    };
-    stream.on("data", onData);
-    stream.on("error", onError);
-    if (stream.readableEnded) {
-      resolve(buffer);
-    }
-  });
-}
-
 function decodeResponseBody(buffer, contentEncoding) {
   if (!contentEncoding) {
     return buffer;
@@ -133,8 +107,12 @@ async function runJsonMode(rawInput) {
 }
 
 async function runStreamMode() {
-  const configLine = await readLine(process.stdin);
-  const config = JSON.parse(configLine);
+  const streamFlagIndex = process.argv.indexOf("--stream");
+  const configArg = process.argv[streamFlagIndex + 1];
+  if (!configArg) {
+    throw new Error("Expected HTTP request JSON after --stream.");
+  }
+  const config = JSON.parse(configArg);
   const response = await performRequest(config, process.stdin);
   writeResponse(response);
 }
