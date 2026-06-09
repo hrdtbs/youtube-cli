@@ -114,11 +114,12 @@ export function startOAuthServer(
 }
 
 export async function openBrowser(url: string): Promise<void> {
-  const platform = process.platform;
+  // On Windows, cmd.exe treats "&" in URLs as a command separator. Use rundll32
+  // so OAuth query params (response_type, client_id, etc.) are not truncated.
   const command =
-    platform === "win32"
-      ? ["cmd", "/c", "start", "", url]
-      : platform === "darwin"
+    process.platform === "win32"
+      ? ["rundll32", "url.dll,FileProtocolHandler", url]
+      : process.platform === "darwin"
         ? ["open", url]
         : ["xdg-open", url];
 

@@ -4,17 +4,11 @@ import { join } from "node:path";
 export const CLI_NAME = "youtube";
 export const APP_NAME = "youtube-cli";
 
-export const YOUTUBE_UPLOAD_SCOPE =
-  "https://www.googleapis.com/auth/youtube.upload";
-
-/** Playlist edits require a broader scope than upload-only. */
+/** Uploads, playlist edits, and channel reads for this CLI. */
 export const YOUTUBE_FORCE_SSL_SCOPE =
   "https://www.googleapis.com/auth/youtube.force-ssl";
 
-export const YOUTUBE_SCOPES = [
-  YOUTUBE_UPLOAD_SCOPE,
-  YOUTUBE_FORCE_SSL_SCOPE,
-];
+export const YOUTUBE_SCOPES = [YOUTUBE_FORCE_SSL_SCOPE];
 
 export const DEFAULT_CLIENT_SECRET_PATH = "./client_secret.json";
 export const CONFIG_FILENAME = "config.yaml";
