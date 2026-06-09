@@ -19,7 +19,8 @@ upload:
 
 schedule:
   timezone: Asia/Tokyo
-  startDate: 2026-06-10
+  # Fixed date (YYYY-MM-DD) or auto (latest publish date + 1 day).
+  startDate: auto
   slots:
     # Every day at 18:00 (alternative to listing weekday 0-6).
     - daily: false

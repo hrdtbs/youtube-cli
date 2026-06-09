@@ -3,6 +3,7 @@ import { loadAppConfig, resolveConfigPath } from "../lib/app-config.js";
 import { getDefaultUploadDir } from "../lib/config.js";
 import { UploadIndex } from "../lib/local-index.js";
 import { createScheduleIterator } from "../lib/schedule.js";
+import { isAutoStartDate, resolveStartDate } from "../lib/start-date.js";
 import { buildMetadata } from "../lib/templates.js";
 import { listVideoFiles } from "../lib/video-files.js";
 import { addVideoToPlaylist, uploadScheduledVideo } from "../youtube/api.js";
@@ -41,10 +42,6 @@ export async function runUpload(options: UploadOptions): Promise<UploadSummary> 
   console.log(`Config: ${configPath}`);
   console.log(`Upload dir: ${uploadDir}`);
   console.log(`Timezone: ${config.schedule.timezone}`);
-  console.log(`Start date: ${config.schedule.startDate}`);
-  if (config.upload?.playlistId) {
-    console.log(`Playlist: ${config.upload.playlistId}`);
-  }
 
   const videos = await listVideoFiles(uploadDir, recursive);
   console.log(`Videos found: ${videos.length}`);
@@ -68,22 +65,47 @@ export async function runUpload(options: UploadOptions): Promise<UploadSummary> 
     return { uploaded: 0, skipped, failed: 0 };
   }
 
-  const scheduleIterator = createScheduleIterator(
-    config.schedule,
-    pending.length,
-  );
+  let authClient: Awaited<ReturnType<typeof getAuthorizedClient>> | null =
+    null;
+  if (!dryRun) {
+    authClient = await getAuthorizedClient();
+  }
+
+  let schedule = config.schedule;
+  if (isAutoStartDate(schedule.startDate)) {
+    let authForStartDate = authClient;
+    if (dryRun && !authForStartDate) {
+      try {
+        authForStartDate = await getAuthorizedClient();
+      } catch {
+        console.log(
+          "Start date: auto (using local index only; auth unavailable)",
+        );
+      }
+    }
+
+    const resolvedStartDate = await resolveStartDate({
+      uploadDir,
+      schedule,
+      auth: authForStartDate,
+    });
+    console.log(`Start date: auto → ${resolvedStartDate}`);
+    schedule = { ...schedule, startDate: resolvedStartDate };
+  } else {
+    console.log(`Start date: ${schedule.startDate}`);
+  }
+
+  if (config.upload?.playlistId) {
+    console.log(`Playlist: ${config.upload.playlistId}`);
+  }
+
+  const scheduleIterator = createScheduleIterator(schedule, pending.length);
 
   const summary: UploadSummary = {
     uploaded: 0,
     skipped,
     failed: 0,
   };
-
-  let authClient: Awaited<ReturnType<typeof getAuthorizedClient>> | null =
-    null;
-  if (!dryRun) {
-    authClient = await getAuthorizedClient();
-  }
 
   for (const video of pending) {
     const slot = scheduleIterator.next().value;

@@ -6,6 +6,7 @@ import {
   CONFIG_FILENAME,
   getDefaultConfigPath,
 } from "./config.js";
+import { START_DATE_AUTO } from "./start-date.js";
 import type { AppConfig, ScheduleSlot } from "../youtube/types.js";
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
@@ -138,8 +139,16 @@ function validateConfig(raw: unknown): AppConfig {
   }
 
   const startDate = scheduleData.startDate;
-  if (typeof startDate !== "string" || !DATE_PATTERN.test(startDate)) {
-    throw new Error("schedule.startDate is required (YYYY-MM-DD).");
+  if (typeof startDate !== "string") {
+    throw new Error(
+      `schedule.startDate is required (YYYY-MM-DD or ${START_DATE_AUTO}).`,
+    );
+  }
+
+  if (startDate !== START_DATE_AUTO && !DATE_PATTERN.test(startDate)) {
+    throw new Error(
+      `schedule.startDate must be YYYY-MM-DD or ${START_DATE_AUTO}.`,
+    );
   }
 
   const slots = scheduleData.slots;

@@ -51,6 +51,10 @@ export class UploadIndex {
     return this.records.has(relativePath);
   }
 
+  getAll(): UploadRecord[] {
+    return [...this.records.values()];
+  }
+
   async markUploaded(
     uploadDir: string,
     record: UploadRecord,
