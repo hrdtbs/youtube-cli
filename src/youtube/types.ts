@@ -47,6 +47,14 @@ export interface VideoCategory {
   assignable: boolean;
 }
 
+export interface ChannelVideo {
+  id: string;
+  title: string;
+  uploadedAt: string;
+  privacyStatus: string;
+  publishAt?: string;
+}
+
 export interface ScheduledSlot {
   publishAtUtc: string;
   publishAtLocal: string;

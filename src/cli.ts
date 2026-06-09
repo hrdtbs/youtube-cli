@@ -8,6 +8,7 @@ import {
 } from "./commands/auth.js";
 import { runCategoriesList } from "./commands/categories.js";
 import { runUpload } from "./commands/upload.js";
+import { runVideosList } from "./commands/videos.js";
 import { CLI_NAME } from "./lib/config.js";
 import { configureGoogleHttp } from "./lib/google-http.js";
 import { AuthError } from "./youtube/auth.js";
@@ -82,6 +83,24 @@ categoriesCmd
         region: options.region,
         hl: options.hl,
         all: options.all,
+      });
+    } catch (error) {
+      reportError(error);
+    }
+  });
+
+const videosCmd = program
+  .command("videos")
+  .description("Channel video commands");
+
+videosCmd
+  .command("list")
+  .description("List uploaded videos on the authenticated channel")
+  .option("--limit <number>", "max videos to show", "20")
+  .action(async (options) => {
+    try {
+      await runVideosList({
+        limit: Number.parseInt(options.limit, 10),
       });
     } catch (error) {
       reportError(error);

@@ -23,6 +23,8 @@ youtube upload --dir ./videos --dry-run
 youtube upload --dir ./videos
 youtube upload --dir ./videos --recursive
 youtube auth status
+youtube videos list
+youtube videos list --limit 50
 youtube categories list
 youtube categories list --region JP --hl ja
 ```
