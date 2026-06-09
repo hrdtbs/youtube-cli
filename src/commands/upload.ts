@@ -22,6 +22,13 @@ function sleep(seconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
+function logDescriptionPreview(description: string): void {
+  console.log("  description:");
+  for (const line of description.split("\n")) {
+    console.log(`    ${line}`);
+  }
+}
+
 export async function runUpload(options: UploadOptions): Promise<UploadSummary> {
   const uploadDir = options.dir ?? getDefaultUploadDir();
   const dryRun = options.dryRun ?? false;
@@ -91,6 +98,7 @@ export async function runUpload(options: UploadOptions): Promise<UploadSummary> 
       console.log("");
       console.log(`[dry-run] ${displayName}`);
       console.log(`  title: ${metadata.title}`);
+      logDescriptionPreview(metadata.description);
       console.log(`  publishAt (local): ${slot.publishAtLocal}`);
       console.log(`  publishAt (UTC): ${slot.publishAtUtc}`);
       if (config.upload?.playlistId) {
