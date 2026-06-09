@@ -9,7 +9,10 @@ import {
 import { runCategoriesList } from "./commands/categories.js";
 import { runUpload } from "./commands/upload.js";
 import { CLI_NAME } from "./lib/config.js";
+import { configureGoogleHttp } from "./lib/google-http.js";
 import { AuthError } from "./youtube/auth.js";
+
+configureGoogleHttp();
 
 const program = new Command();
 

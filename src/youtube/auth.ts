@@ -7,6 +7,7 @@ import {
   resolveClientSecretPath,
   YOUTUBE_SCOPES,
 } from "../lib/config.js";
+import { getGoogleFetchImplementation } from "../lib/google-http.js";
 import { openBrowser, startOAuthServer } from "../lib/oauth-server.js";
 import type { ClientSecretFile, TokenFile } from "./types.js";
 
@@ -65,11 +66,15 @@ function createOAuth2Client(
   config: OAuthClientConfig,
   redirectUri: string,
 ): OAuth2Client {
-  return new google.auth.OAuth2(
-    config.clientId,
-    config.clientSecret,
+  const fetchImplementation = getGoogleFetchImplementation();
+  return new google.auth.OAuth2({
+    clientId: config.clientId,
+    clientSecret: config.clientSecret,
     redirectUri,
-  );
+    ...(fetchImplementation
+      ? { transporterOptions: { fetchImplementation } }
+      : {}),
+  });
 }
 
 export async function loadTokenFile(): Promise<TokenFile | null> {
@@ -104,14 +109,24 @@ export async function runAuthLogin(options: {
     // select_account is required for Google's Brand Account channel picker.
     prompt: "consent select_account",
     scope: YOUTUBE_SCOPES,
+    include_granted_scopes: true,
   });
 
   console.log("Opening browser for Google authorization...");
   console.log(
-    "If you manage a Brand Account, choose your Google account, then pick the Brand Account channel on the next screen.",
+    "Brand Account owners: pick your Google account, then choose the Brand Account on the next screen.",
   );
   console.log(
-    "If the channel picker does not appear, revoke this app at https://myaccount.google.com/permissions and run auth login again.",
+    "Brand Account managers: Google often does NOT show managed Brand Accounts in OAuth (YouTube limitation).",
+  );
+  console.log(
+    "If you are a manager, ask the channel owner to run auth login and share the token, or have the owner upload.",
+  );
+  console.log(
+    "Channels granted via YouTube Studio permissions may also be missing from the OAuth picker.",
+  );
+  console.log(
+    "If the picker is wrong, revoke this app at https://myaccount.google.com/permissions and run auth login again.",
   );
   console.log(`If the browser does not open, visit:\n${authUrl}\n`);
 
@@ -180,7 +195,7 @@ export async function runAuthChannels(): Promise<void> {
   if (channels.length === 0) {
     console.log("No channel associated with the current token.");
     console.log(
-      "Run auth login again and select your Brand Account on the channel picker screen.",
+      "If you are a Brand Account manager, OAuth may not list that channel. Ask the owner to run auth login instead.",
     );
     return;
   }
