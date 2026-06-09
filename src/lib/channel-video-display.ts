@@ -1,17 +1,12 @@
 import { DateTime } from "luxon";
-import { listChannelVideos } from "../youtube/api.js";
-import { fetchMyChannels, getAuthorizedClient } from "../youtube/auth.js";
+import type { AuthenticatedChannel } from "../youtube/auth.js";
 import type { ChannelVideo } from "../youtube/types.js";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 500;
 const DISPLAY_TIMEZONE = "Asia/Tokyo";
 
-export interface VideosListOptions {
-  limit?: number;
-}
-
-function resolveLimit(limit?: number): number {
+export function resolveVideoListLimit(limit?: number): number {
   const value = limit ?? DEFAULT_LIMIT;
 
   if (!Number.isFinite(value) || value < 1) {
@@ -39,7 +34,7 @@ function formatDateTime(iso: string): string {
   return `${parsed.toFormat("yyyy-MM-dd HH:mm")} JST`;
 }
 
-function displayDateTime(video: ChannelVideo): string {
+export function displayDateTime(video: ChannelVideo): string {
   if (video.privacyStatus === "private" && video.publishAt) {
     return formatDateTime(video.publishAt);
   }
@@ -47,23 +42,17 @@ function displayDateTime(video: ChannelVideo): string {
   return formatDateTime(video.uploadedAt);
 }
 
-export async function runVideosList(
-  options: VideosListOptions,
-): Promise<void> {
-  const limit = resolveLimit(options.limit);
-  const auth = await getAuthorizedClient();
-  const channels = await fetchMyChannels(auth);
+export interface PrintChannelVideosTableOptions {
+  limit: number;
+  numbered?: boolean;
+}
 
-  if (channels.length === 0) {
-    console.log("No channel associated with the current token.");
-    console.log(
-      "If you are a Brand Account manager, OAuth may not list that channel. Ask the owner to run auth login instead.",
-    );
-    return;
-  }
-
-  const channel = channels[0];
-  const videos = await listChannelVideos(auth, { limit });
+export function printChannelVideosTable(
+  videos: ChannelVideo[],
+  channel: AuthenticatedChannel,
+  options: PrintChannelVideosTableOptions,
+): void {
+  const { limit, numbered = false } = options;
 
   console.log(`Channel: ${channel.title} (${channel.id})`);
   console.log(`Showing latest ${limit} uploaded video(s).`);
@@ -74,6 +63,9 @@ export async function runVideosList(
     return;
   }
 
+  const indexWidth = numbered
+    ? Math.max(String(videos.length).length, 1)
+    : 0;
   const idWidth = Math.max(...videos.map((video) => video.id.length), 7);
   const statusWidth = Math.max(
     ...videos.map((video) => video.privacyStatus.length),
@@ -84,13 +76,19 @@ export async function runVideosList(
     20,
   );
 
+  const indexHeader = numbered ? `${"#".padEnd(indexWidth)}  ` : "";
   console.log(
-    `${"videoId".padEnd(idWidth)}  ${"status".padEnd(statusWidth)}  ${"scheduled/published".padEnd(dateWidth)}  title`,
+    `${indexHeader}${"videoId".padEnd(idWidth)}  ${"status".padEnd(statusWidth)}  ${"scheduled/published".padEnd(dateWidth)}  title`,
   );
 
-  for (const video of videos) {
+  for (let index = 0; index < videos.length; index += 1) {
+    const video = videos[index];
+    const indexColumn = numbered
+      ? `${String(index + 1).padEnd(indexWidth)}  `
+      : "";
+
     console.log(
-      `${video.id.padEnd(idWidth)}  ${video.privacyStatus.padEnd(statusWidth)}  ${displayDateTime(video).padEnd(dateWidth)}  ${video.title}`,
+      `${indexColumn}${video.id.padEnd(idWidth)}  ${video.privacyStatus.padEnd(statusWidth)}  ${displayDateTime(video).padEnd(dateWidth)}  ${video.title}`,
     );
   }
 }

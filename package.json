@@ -25,6 +25,7 @@
     "url": "https://github.com/hrdtbs/youtube-cli.git"
   },
   "dependencies": {
+    "@clack/prompts": "^1.5.1",
     "commander": "^13.1.0",
     "googleapis": "^144.0.0",
     "luxon": "^3.5.0",

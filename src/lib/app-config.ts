@@ -6,18 +6,13 @@ import {
   CONFIG_FILENAME,
   getDefaultConfigPath,
 } from "./config.js";
+import { normalizePlaylistId } from "./playlist-id.js";
 import { START_DATE_AUTO } from "./start-date.js";
 import type { AppConfig, ScheduleSlot } from "../youtube/types.js";
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const PLAYLIST_ID_PATTERN = /^[\w-]+$/;
-
-function normalizePlaylistId(value: string): string {
-  const trimmed = value.trim();
-  const fromUrl = trimmed.match(/[?&]list=([^&]+)/)?.[1];
-  return fromUrl ?? trimmed;
-}
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -34,6 +29,11 @@ export async function resolveConfigPath(
 ): Promise<string> {
   if (explicit) {
     return explicit;
+  }
+
+  const rootConfig = join(process.cwd(), CONFIG_FILENAME);
+  if (await fileExists(rootConfig)) {
+    return rootConfig;
   }
 
   const inUploadDir = join(uploadDir, CONFIG_FILENAME);

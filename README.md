@@ -16,15 +16,63 @@ bun install -g github:hrdtbs/youtube-cli
 bun update -g youtube-cli --force
 ```
 
-## 使い方
+## コマンド一覧
+
+コマンドは操作対象（ドメイン）ごとにグループ化されています。
+
+```
+youtube
+├── auth        # 認証
+├── videos      # チャンネル上の動画
+├── playlists   # 再生リスト
+├── categories  # 設定用参照データ
+└── upload      # 一括アップロード
+```
+
+### 認証 (`auth`)
+
+```bash
+youtube auth login --client-secret ./client_secret.json
+youtube auth status
+youtube auth channels
+```
+
+### 動画 (`videos`)
+
+```bash
+youtube videos list
+youtube videos list --limit 50
+```
+
+チャンネルに登録済みの動画を一覧表示します（要 `auth login`）。
+
+### 再生リスト (`playlists`)
+
+```bash
+youtube playlists add
+youtube playlists add --playlist PLxxxxxxxxxxxxxxxx
+youtube playlists add --limit 50 --playlist "https://www.youtube.com/playlist?list=PLxxx"
+```
+
+登録済み動画を対話形式で選択し、指定した再生リストに追加します（要 `auth login`）。
+
+| オプション | 説明 |
+|------------|------|
+| `--playlist` | 再生リスト ID（`PL...`）または `?list=` 付き URL。未指定時は `config.yaml` の `upload.playlistId` を使用 |
+| `--config` | フォールバック用 config.yaml のパス（未指定時は [設定ファイルの場所](#設定ファイルの場所) の順で探索） |
+| `--limit` | 選択候補として表示する最大件数（デフォルト 20、最大 500） |
+
+### アップロード (`upload`)
 
 ```bash
 youtube upload --dir ./videos --dry-run
 youtube upload --dir ./videos
 youtube upload --dir ./videos --recursive
-youtube auth status
-youtube videos list
-youtube videos list --limit 50
+```
+
+### カテゴリ (`categories`)
+
+```bash
 youtube categories list
 youtube categories list --region JP --hl ja
 ```
@@ -35,11 +83,12 @@ youtube categories list --region JP --hl ja
 
 ### 設定ファイルの場所
 
-`youtube upload` は次の順で `config.yaml` を探します。
+`youtube upload` と `youtube playlists add`（`--playlist` 未指定時）は、次の順で `config.yaml` を探します。
 
 1. `--config` で指定したパス
-2. 動画フォルダ（`--dir`）内の `config.yaml`
-3. ユーザ設定ディレクトリの `config.yaml`
+2. カレントディレクトリの `config.yaml`（プロジェクトルートなど）
+3. 動画フォルダ内の `config.yaml`（`upload` は `--dir`、`playlists add` はデフォルト `./videos`）
+4. ユーザ設定ディレクトリの `config.yaml`
    - Windows: `%APPDATA%\youtube-cli\config.yaml`
    - macOS / Linux: `~/.config/youtube-cli/config.yaml`
 
@@ -141,14 +190,14 @@ schedule:
 
 | 項目 | 必須 | 説明 |
 |------|------|------|
-| `playlistId` | 任意 | アップロード後に動画を追加する再生リスト。プレイリスト ID（`PL...`）または `?list=` 付き URL |
+| `playlistId` | 任意 | アップロード後に動画を追加する再生リスト。プレイリスト ID（`PL...`）または `?list=` 付き URL。`playlists add` で `--playlist` 未指定時のフォールバック先にもなります |
 
 ```yaml
 upload:
   playlistId: "PLxxxxxxxxxxxxxxxx"
 ```
 
-`upload` セクション自体は省略できます。`playlistId` も未指定なら再生リストへの追加は行いません。
+`upload` セクション自体は省略できます。`playlistId` も未指定なら、アップロード後の自動追加と `playlists add` のフォールバックは行いません。
 
 ### 設定例（まとめ）
 
@@ -180,11 +229,11 @@ schedule:
       time: "12:00"
 ```
 
-## 認証
+## 認証のセットアップ
 
 1. [Google Cloud Console](https://console.cloud.google.com/) で YouTube Data API v3 を有効化
 2. OAuth クライアント ID（デスクトップアプリ）を作成し、JSON を `client_secret.json` として保存
-3. 初回のみブラウザでログイン:
+3. 初回のみブラウザでログイン（詳細は [認証 (`auth`)](#認証-auth) を参照）:
 
 ```bash
 youtube auth login --client-secret ./client_secret.json

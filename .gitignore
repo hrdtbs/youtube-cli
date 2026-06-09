@@ -117,5 +117,5 @@ dist
 # TernJS port file
 .tern-port
 
-# 
-videos
+# Local upload directory
+/videos

@@ -7,8 +7,9 @@ import {
   runAuthStatusCommand,
 } from "./commands/auth.js";
 import { runCategoriesList } from "./commands/categories.js";
+import { runPlaylistsAdd } from "./commands/playlists/add.js";
 import { runUpload } from "./commands/upload.js";
-import { runVideosList } from "./commands/videos.js";
+import { runVideosList } from "./commands/videos/list.js";
 import { CLI_NAME } from "./lib/config.js";
 import { configureGoogleHttp } from "./lib/google-http.js";
 import { AuthError } from "./youtube/auth.js";
@@ -100,6 +101,28 @@ videosCmd
   .action(async (options) => {
     try {
       await runVideosList({
+        limit: Number.parseInt(options.limit, 10),
+      });
+    } catch (error) {
+      reportError(error);
+    }
+  });
+
+const playlistsCmd = program
+  .command("playlists")
+  .description("YouTube playlist commands");
+
+playlistsCmd
+  .command("add")
+  .description("Select channel videos and add them to a playlist")
+  .option("--playlist <id>", "playlist ID or URL with ?list=")
+  .option("--config <path>", "config.yaml path for playlist fallback")
+  .option("--limit <number>", "max videos to show for selection", "20")
+  .action(async (options) => {
+    try {
+      await runPlaylistsAdd({
+        playlist: options.playlist,
+        config: options.config,
         limit: Number.parseInt(options.limit, 10),
       });
     } catch (error) {

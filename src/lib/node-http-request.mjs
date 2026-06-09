@@ -12,6 +12,22 @@ function isReadableStream(value) {
   );
 }
 
+function serializeRequestBody(body) {
+  if (Buffer.isBuffer(body)) {
+    return body;
+  }
+
+  if (typeof body === "string") {
+    return body;
+  }
+
+  if (typeof body === "object" && body !== null) {
+    return JSON.stringify(body);
+  }
+
+  return String(body);
+}
+
 function readAllStdin() {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -86,7 +102,7 @@ function performRequest(config, body) {
       } else if (Buffer.isBuffer(body)) {
         req.end(body);
       } else {
-        req.end(String(body));
+        req.end(serializeRequestBody(body));
       }
       return;
     }
